@@ -5,35 +5,134 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Allgemeine Anamnese</title>
+
+    <!-- Speed up TLS/DNS/connection for Google Docs -->
+    <link rel="preconnect" href="https://docs.google.com" />
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://ssl.gstatic.com" crossorigin />
+
     <style>
       html, body { margin: 0; height: 100%; }
-      body { overflow: hidden; }
+      body { overflow: hidden; background: #fff; }
+
       iframe { width: 100%; height: 100vh; border: 0; display: block; }
-      .fallback {
+
+      .overlay {
+        position: fixed; inset: 0;
+        display: grid; place-items: center;
+        background: #fff;
+        z-index: 9999;
         font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        padding: 12px;
+        color: #111;
+      }
+
+      .card {
+        width: min(420px, calc(100vw - 24px));
+        padding: 16px;
+        border-radius: 14px;
+        border: 1px solid rgba(0,0,0,0.10);
+        box-shadow: 0 12px 36px rgba(0,0,0,0.10);
+      }
+
+      .row { display: flex; gap: 12px; align-items: center; }
+
+      .spinner {
+        width: 18px; height: 18px;
+        border-radius: 999px;
+        border: 2px solid rgba(0,0,0,0.15);
+        border-top-color: rgba(0,0,0,0.65);
+        animation: spin 0.9s linear infinite;
+        flex: 0 0 auto;
+      }
+
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      .muted { opacity: 0.75; margin-top: 8px; }
+      .actions { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+      .btn {
+        display: inline-block;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(0,0,0,0.14);
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .btn.primary {
+        background: rgba(0,0,0,0.06);
+        border-color: rgba(0,0,0,0.12);
       }
     </style>
   </head>
+
   <body>
+    <div id="overlay" class="overlay" aria-live="polite">
+      <div class="card">
+        <div class="row">
+          <div class="spinner" aria-hidden="true"></div>
+          <div>
+            <div><strong>Doküman yükleniyor…</strong></div>
+            <div class="muted">Google Docs bazen yavaş açılabiliyor.</div>
+          </div>
+        </div>
+
+        <div id="fallback" class="muted" style="display:none;">
+          12 saniyedir yüklenmedi. Engelleniyor olabilir (AdBlock / ağ / DNS).
+          <div class="actions">
+            <a class="btn primary" id="openDoc" href="#" rel="noopener">Dokümanı aç</a>
+            <a class="btn" href="./">Siteye dön</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <iframe
+      id="docFrame"
       title="Allgemeine Anamnese"
-      loading="lazy"
+      loading="eager"
       referrerpolicy="no-referrer-when-downgrade"
       src="https://docs.google.com/document/d/e/2PACX-1vRgWebkxYAPhHHiJBsF8cfkL9_D0wNCI7D3VghDVIGVzkctL0a2Y6t_s7MWNX9cMQ/pub?embedded=true"
       allowfullscreen
     ></iframe>
 
-    <noscript class="fallback">
-      Bu sayfayı görüntülemek için JavaScript açık olmalı.
-      <a href="https://docs.google.com/document/d/e/2PACX-1vRgWebkxYAPhHHiJBsF8cfkL9_D0wNCI7D3VghDVIGVzkctL0a2Y6t_s7MWNX9cMQ/pub" rel="noopener">
-        Dokümanı aç
-      </a>
-    </noscript>
+    <script>
+      (function () {
+        "use strict";
+
+        const DOC_PUB_URL =
+          "https://docs.google.com/document/d/e/2PACX-1vRgWebkxYAPhHHiJBsF8cfkL9_D0wNCI7D3VghDVIGVzkctL0a2Y6t_s7MWNX9cMQ/pub";
+
+        const overlay = document.getElementById("overlay");
+        const fallback = document.getElementById("fallback");
+        const openDoc = document.getElementById("openDoc");
+        const frame = document.getElementById("docFrame");
+
+        openDoc.href = DOC_PUB_URL;
+
+        let loaded = false;
+
+        function hideOverlay() {
+          overlay.style.display = "none";
+        }
+
+        frame.addEventListener("load", () => {
+          loaded = true;          // why: timeout fallback'ı iptal etmek için
+          hideOverlay();
+        });
+
+        // Timeout fallback: iframe hiç yüklenmezse kullanıcıyı kilitlemesin
+        window.setTimeout(() => {
+          if (loaded) return;
+          fallback.style.display = "block";
+        }, 12000);
+      })();
+    </script>
   </body>
 </html>
 
-<!-- /index.html  (repo root'ta olmalı) -->
+
+<!-- /index.html (repo root; ilk açılışta bu sayfaya gelsin) -->
 <!doctype html>
 <html lang="tr">
   <head>
